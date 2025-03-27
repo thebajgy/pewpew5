@@ -1,6 +1,5 @@
-// src/components/QRCodeGenerator.jsx
-
 import React, { useState } from "react";
+import QRCode from "qrcode.react"; // Import QRCode from qrcode.react
 
 const QRCodeGenerator = ({ onGenerate }) => {
   const [name, setName] = useState("");
@@ -12,6 +11,9 @@ const QRCodeGenerator = ({ onGenerate }) => {
     const player = { name, email, phone, equipment };
     onGenerate(player);  // Calls the function passed from parent
   };
+
+  // Format the player object to a JSON string to generate the QR code
+  const playerData = JSON.stringify({ name, email, phone, equipment });
 
   return (
     <div>
@@ -34,9 +36,21 @@ const QRCodeGenerator = ({ onGenerate }) => {
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
       />
+      <input
+        type="text"
+        placeholder="Equipment"
+        value={equipment[0]} // Assuming a single equipment slot for simplicity
+        onChange={(e) => setEquipment([e.target.value])}
+      />
+
       <button onClick={handleSubmit}>Generate Player</button>
+
+      {/* Generate QR Code */}
+      <div style={{ marginTop: "20px" }}>
+        <QRCode value={playerData} />
+      </div>
     </div>
   );
 };
 
-export default QRCodeGenerator;  // Ensure it's exported as default
+export default QRCodeGenerator;
