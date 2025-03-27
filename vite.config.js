@@ -1,105 +1,101 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-export default defineConfig({
-  server: {
-    port: process.env.PORT || 3000, // Použije port z Renderu nebo 3000 jako zálohu
-    host: '0.0.0.0' // Umožní přístup zvenčí
-  }
-});
 
 const addTransformIndexHtml = {
-	name: 'add-transform-index-html',
-	transformIndexHtml(html) {
-		return {
-			html,
-			tags: [
-				{
-					tag: 'script',
-					attrs: { type: 'module' },
-					children: `
-						window.onerror = (message, source, lineno, colno, errorObj) => {
-							window.parent.postMessage({
-								type: 'horizons-runtime-error',
-								message,
-								source,
-								lineno,
-								colno,
-								error: errorObj && errorObj.stack
-							}, '*');
-						};
+  name: 'add-transform-index-html',
+  transformIndexHtml(html) {
+    return {
+      html,
+      tags: [
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          children: `
+            window.onerror = (message, source, lineno, colno, errorObj) => {
+              window.parent.postMessage({
+                type: 'horizons-runtime-error',
+                message,
+                source,
+                lineno,
+                colno,
+                error: errorObj && errorObj.stack
+              }, '*');
+            };
           `,
-					injectTo: 'head',
-				},
-				{
-					tag: 'script',
-					attrs: { type: 'module' },
-					children: `
-						const observer = new MutationObserver((mutations) => {
-							for (const mutation of mutations) {
-								for (const addedNode of mutation.addedNodes) {
-									if (
-										addedNode.nodeType === Node.ELEMENT_NODE &&
-										(
-											addedNode.tagName?.toLowerCase() === 'vite-error-overlay' ||
-											addedNode.classList?.contains('backdrop')
-										)
-									) {
-										handleViteOverlay(addedNode);
-									}
-								}
-							}
-						});
+          injectTo: 'head',
+        },
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          children: `
+            const observer = new MutationObserver((mutations) => {
+              for (const mutation of mutations) {
+                for (const addedNode of mutation.addedNodes) {
+                  if (
+                    addedNode.nodeType === Node.ELEMENT_NODE &&
+                    (
+                      addedNode.tagName?.toLowerCase() === 'vite-error-overlay' ||
+                      addedNode.classList?.contains('backdrop')
+                    )
+                  ) {
+                    handleViteOverlay(addedNode);
+                  }
+                }
+              }
+            });
 
-						observer.observe(document.documentElement, {
-							childList: true,
-							subtree: true
-						});
+            observer.observe(document.documentElement, {
+              childList: true,
+              subtree: true
+            });
 
-						function handleViteOverlay(node) {
-							if (!node.shadowRoot) {
-								return;
-							}
+            function handleViteOverlay(node) {
+              if (!node.shadowRoot) {
+                return;
+              }
 
-							const backdrop = node.shadowRoot.querySelector('.backdrop');
+              const backdrop = node.shadowRoot.querySelector('.backdrop');
 
-							if (backdrop) {
-								const overlayHtml = backdrop.outerHTML;
-								const parser = new DOMParser();
-								const doc = parser.parseFromString(overlayHtml, 'text/html');
-								const messageBodyElement = doc.querySelector('.message-body');
-								const fileElement = doc.querySelector('.file');
-								const messageText = messageBodyElement ? messageBodyElement.textContent.trim() : '';
-								const fileText = fileElement ? fileElement.textContent.trim() : '';
-								const error = messageText + (fileText ? ' File:' + fileText : '');
+              if (backdrop) {
+                const overlayHtml = backdrop.outerHTML;
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(overlayHtml, 'text/html');
+                const messageBodyElement = doc.querySelector('.message-body');
+                const fileElement = doc.querySelector('.file');
+                const messageText = messageBodyElement ? messageBodyElement.textContent.trim() : '';
+                const fileText = fileElement ? fileElement.textContent.trim() : '';
+                const error = messageText + (fileText ? ' File:' + fileText : '');
 
-								window.parent.postMessage({
-									type: 'horizons-vite-error',
-									error,
-								}, '*');
-							}
-						}
+                window.parent.postMessage({
+                  type: 'horizons-vite-error',
+                  error,
+                }, '*');
+              }
+            }
           `,
-					injectTo: 'head',
-				},
-			],
-		};
-	},
+          injectTo: 'head',
+        },
+      ],
+    };
+  },
 };
 
 export default defineConfig({
-	plugins: [react(), addTransformIndexHtml],
-	server: {
-		cors: true,
-		headers: {
-			'Cross-Origin-Embedder-Policy': 'credentialless',
-		},
-		allowedHosts: true,
-	},
-	resolve: {
-		extensions: ['.jsx', '.js', '.tsx', '.ts', '.json', ],
-		alias: {
-			'@': path.resolve(__dirname, './src'),
-		},
-	},
+  plugins: [react(), addTransformIndexHtml],
+  server: {
+    port: process.env.PORT || 3000,
+    host: '0.0.0.0',
+    cors: true,
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+    },
+    allowedHosts: true,
+  },
+  resolve: {
+    extensions: ['.jsx', '.js', '.tsx', '.ts', '.json'],
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
 });
