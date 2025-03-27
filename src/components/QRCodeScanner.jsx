@@ -1,43 +1,41 @@
-import React, { useEffect, useState } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+// src/components/QRCodeScanner.jsx
 
-export function QRCodeScanner({ onScan }) {
+import React, { useEffect, useRef, useState } from "react";
+import { Html5QrcodeScanner } from "html5-qrcode"; // Import scanner
+
+const QRCodeScanner = ({ onScan }) => {
   const [isScanning, setIsScanning] = useState(false);
-  const [lastScan, setLastScan] = useState(null);
-  let scanner = null;
+  const [scanError, setScanError] = useState(null);
+  const scannerRef = useRef(null);
 
   useEffect(() => {
-    // Initialize scanner once the component is mounted
-    scanner = new Html5QrcodeScanner("qr-reader", {
+    scannerRef.current = new Html5QrcodeScanner("qr-reader", {
       fps: 10,
       qrbox: 250,
       aspectRatio: 1.0,
     });
 
     return () => {
-      if (scanner) {
-        scanner.clear(); // Stop the scanner on cleanup
+      if (scannerRef.current) {
+        scannerRef.current.clear(); // Stop the scanner on cleanup
       }
     };
   }, []);
 
   const startScanning = () => {
-    if (scanner && !isScanning) {
-      scanner.render(
+    if (!isScanning) {
+      scannerRef.current.render(
         (decodedText) => {
           try {
             const playerData = JSON.parse(decodedText);
-            setLastScan(playerData);
-            onScan(playerData); // Pass decoded player data to parent component
+            onScan(playerData); // Send the scanned player data to parent
+            setScanError(null); // Clear any previous errors
           } catch (error) {
-            console.error("Failed to parse QR code data:", error);
-            alert("Invalid QR code format");
+            setScanError("Invalid QR code format");
           }
         },
         (error) => {
-          console.error("QR Scan Error:", error);
+          setScanError("Scanning error, please try again.");
         }
       );
       setIsScanning(true);
@@ -45,53 +43,43 @@ export function QRCodeScanner({ onScan }) {
   };
 
   const stopScanning = () => {
-    if (scanner && isScanning) {
-      scanner.pause(); // Pause scanner
+    if (isScanning) {
+      scannerRef.current.pause(); // Pause scanning
       setIsScanning(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="p-4 bg-card rounded-lg shadow space-y-4">
-        <div className="flex gap-2 mb-4">
-          <Button onClick={startScanning} disabled={isScanning}>
-            Start Scanning
-          </Button>
-          <Button onClick={stopScanning} disabled={!isScanning} variant="outline">
-            Stop Scanning
-          </Button>
-        </div>
-
-        <div id="qr-reader" className="w-full max-w-md mx-auto" />
-
-        <p className="text-sm text-muted-foreground text-center mt-4">
-          Position the player's QR code within the scanner frame to verify their information
-        </p>
+    <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-lg">
+      <div className="flex justify-between mb-4">
+        <button
+          onClick={startScanning}
+          disabled={isScanning}
+          className="bg-blue-600 text-white py-2 px-6 rounded-md"
+        >
+          Start Scanning
+        </button>
+        <button
+          onClick={stopScanning}
+          disabled={!isScanning}
+          className="bg-red-600 text-white py-2 px-6 rounded-md"
+        >
+          Stop Scanning
+        </button>
       </div>
 
-      {lastScan && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-4 bg-card rounded-lg shadow"
-        >
-          <h3 className="text-lg font-semibold mb-2">Last Scanned Player</h3>
-          <div className="space-y-2">
-            <p><span className="font-medium">Name:</span> {lastScan.name}</p>
-            <p><span className="font-medium">Email:</span> {lastScan.email}</p>
-            <p><span className="font-medium">Phone:</span> {lastScan.phone}</p>
-            <div className="space-y-1">
-              <p className="font-medium">Equipment:</p>
-              {lastScan.equipment && lastScan.equipment.map((item, index) => (
-                <p key={index} className="pl-4 text-sm text-muted-foreground">
-                  {item || `Equipment slot ${index + 1} (empty)`}
-                </p>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+      <div id="qr-reader" className="w-full max-w-md mx-auto mb-4"></div>
+
+      <p className="text-center text-sm text-muted">Scan a QR code to retrieve player data.</p>
+
+      {/* Error or Success message */}
+      {scanError && (
+        <div className="mt-4 p-4 bg-red-500 text-white rounded-lg">
+          <p>{scanError}</p>
+        </div>
       )}
     </div>
   );
-}
+};
+
+export default QRCodeScanner;
