@@ -1,8 +1,8 @@
 // src/App.jsx
 
 import React, { useState, useEffect } from "react";
-import Login from "@/components/Login"; // Correct import (must match the default export)
-import PlayerList from "@/components/PlayerList";
+import Login from "@/components/Login";
+import PlayerList from "@/components/PlayerList"; // Correct import for default export
 import QRCodeGenerator from "@/components/QRCodeGenerator";
 import QRCodeScanner from "@/components/QRCodeScanner";
 import { Button } from "@/components/ui/button"; 
