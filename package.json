@@ -1,4 +1,3 @@
-
 {
   "name": "airsoft-qr-manager",
   "private": true,
@@ -7,12 +6,9 @@
   "scripts": {
     "start": "vite preview --port $PORT",
     "build": "vite build",
-    "dev": "vite --host"
-  }
-}
-
+    "dev": "vite --host",
     "preview": "vite preview"
-  }
+  },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.3",
