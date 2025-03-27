@@ -1,6 +1,12 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+export default defineConfig({
+  server: {
+    port: process.env.PORT || 3000, // Použije port z Renderu nebo 3000 jako zálohu
+    host: '0.0.0.0' // Umožní přístup zvenčí
+  }
+});
 
 const addTransformIndexHtml = {
 	name: 'add-transform-index-html',
