@@ -1,44 +1,43 @@
-
 import React, { useEffect, useState } from "react";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
 export function QRCodeScanner({ onScan }) {
-  const [scanner, setScanner] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [lastScan, setLastScan] = useState(null);
+  let scanner = null;
 
   useEffect(() => {
-    const qrScanner = new Html5QrcodeScanner("qr-reader", {
+    // Initialize scanner once the component is mounted
+    scanner = new Html5QrcodeScanner("qr-reader", {
       fps: 10,
       qrbox: 250,
       aspectRatio: 1.0,
     });
 
-    setScanner(qrScanner);
-
     return () => {
       if (scanner) {
-        scanner.clear();
+        scanner.clear(); // Stop the scanner on cleanup
       }
     };
   }, []);
 
   const startScanning = () => {
-    if (scanner) {
+    if (scanner && !isScanning) {
       scanner.render(
         (decodedText) => {
           try {
             const playerData = JSON.parse(decodedText);
             setLastScan(playerData);
-            onScan(decodedText);
+            onScan(playerData); // Pass decoded player data to parent component
           } catch (error) {
             console.error("Failed to parse QR code data:", error);
+            alert("Invalid QR code format");
           }
         },
         (error) => {
-          console.log(error);
+          console.error("QR Scan Error:", error);
         }
       );
       setIsScanning(true);
@@ -46,8 +45,8 @@ export function QRCodeScanner({ onScan }) {
   };
 
   const stopScanning = () => {
-    if (scanner) {
-      scanner.pause();
+    if (scanner && isScanning) {
+      scanner.pause(); // Pause scanner
       setIsScanning(false);
     }
   };
@@ -84,7 +83,7 @@ export function QRCodeScanner({ onScan }) {
             <p><span className="font-medium">Phone:</span> {lastScan.phone}</p>
             <div className="space-y-1">
               <p className="font-medium">Equipment:</p>
-              {lastScan.equipment.map((item, index) => (
+              {lastScan.equipment && lastScan.equipment.map((item, index) => (
                 <p key={index} className="pl-4 text-sm text-muted-foreground">
                   {item || `Equipment slot ${index + 1} (empty)`}
                 </p>
