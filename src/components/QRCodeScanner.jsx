@@ -1,7 +1,7 @@
 // src/components/QRCodeScanner.jsx
 
 import React, { useEffect, useRef, useState } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode"; // Import scanner
+import { Html5QrcodeScanner } from "html5-qrcode";
 
 const QRCodeScanner = ({ onScan }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -9,6 +9,7 @@ const QRCodeScanner = ({ onScan }) => {
   const scannerRef = useRef(null);
 
   useEffect(() => {
+    // Initialize the scanner once the component is mounted
     scannerRef.current = new Html5QrcodeScanner("qr-reader", {
       fps: 10,
       qrbox: 250,
@@ -23,19 +24,21 @@ const QRCodeScanner = ({ onScan }) => {
   }, []);
 
   const startScanning = () => {
-    if (!isScanning) {
+    if (scannerRef.current && !isScanning) {
       scannerRef.current.render(
         (decodedText) => {
           try {
             const playerData = JSON.parse(decodedText);
-            onScan(playerData); // Send the scanned player data to parent
+            onScan(playerData); // Pass decoded player data to parent component
             setScanError(null); // Clear any previous errors
           } catch (error) {
-            setScanError("Invalid QR code format");
+            console.error("Failed to parse QR code data:", error);
+            setScanError("Invalid QR code format"); // Show error message in UI
           }
         },
         (error) => {
-          setScanError("Scanning error, please try again.");
+          console.error("QR Scan Error:", error);
+          setScanError("Scanning error, please try again."); // Show error message in UI
         }
       );
       setIsScanning(true);
@@ -43,38 +46,33 @@ const QRCodeScanner = ({ onScan }) => {
   };
 
   const stopScanning = () => {
-    if (isScanning) {
-      scannerRef.current.pause(); // Pause scanning
+    if (scannerRef.current && isScanning) {
+      scannerRef.current.pause(); // Pause scanner
       setIsScanning(false);
     }
   };
 
   return (
-    <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-lg">
-      <div className="flex justify-between mb-4">
-        <button
-          onClick={startScanning}
-          disabled={isScanning}
-          className="bg-blue-600 text-white py-2 px-6 rounded-md"
-        >
-          Start Scanning
-        </button>
-        <button
-          onClick={stopScanning}
-          disabled={!isScanning}
-          className="bg-red-600 text-white py-2 px-6 rounded-md"
-        >
-          Stop Scanning
-        </button>
+    <div className="space-y-6">
+      <div className="p-4 bg-card rounded-lg shadow space-y-4">
+        <div className="flex gap-2 mb-4">
+          <button onClick={startScanning} disabled={isScanning}>
+            Start Scanning
+          </button>
+          <button onClick={stopScanning} disabled={!isScanning} variant="outline">
+            Stop Scanning
+          </button>
+        </div>
+
+        <div id="qr-reader" className="w-full max-w-md mx-auto" />
+
+        <p className="text-sm text-muted-foreground text-center mt-4">
+          Position the player's QR code within the scanner frame to verify their information
+        </p>
       </div>
 
-      <div id="qr-reader" className="w-full max-w-md mx-auto mb-4"></div>
-
-      <p className="text-center text-sm text-muted">Scan a QR code to retrieve player data.</p>
-
-      {/* Error or Success message */}
       {scanError && (
-        <div className="mt-4 p-4 bg-red-500 text-white rounded-lg">
+        <div className="p-4 bg-red-500 text-white rounded-lg shadow">
           <p>{scanError}</p>
         </div>
       )}
