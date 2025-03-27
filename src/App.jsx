@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { QRCodeScanner } from "@/components/QRCodeScanner";
-import { QRCodeGenerator } from "@/components/QRCodeGenerator";
+import QRCodeGenerator from "@/components/QRCodeGenerator";  // Ensure default import
 import { PlayerList } from "@/components/PlayerList";
 import { Login } from "@/components/Login";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,7 +48,7 @@ function App() {
     try {
       const playerData = JSON.parse(result);
       const existingPlayer = players.find((p) => p.id === playerData.id);
-      
+
       if (existingPlayer) {
         const statusColor = existingPlayer.status === "active" ? "text-green-600" : "text-red-600";
         toast({
@@ -180,3 +179,4 @@ function App() {
 }
 
 export default App;
+
